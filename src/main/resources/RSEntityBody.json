@@ -1,0 +1,33 @@
+ {
+  "params": {
+    "query": {
+    	 "valueContexts": [
+        {
+          "locale": "en-US"
+        }
+      ], 
+      "filters": {
+        "typesCriterion": [
+         "product","sku"
+        ]
+      }
+    },
+    "fields": {
+      "attributes": [
+        "_ALL"
+      ]
+    },
+    "sort": {
+      "properties": [
+        {
+          "createdDate": "_ASC",
+          "sortType": "_STRING"
+        }
+      ]
+    },
+    "options": {
+      "maxRecords": 1000,
+      "from": 0
+    }
+  }
+}

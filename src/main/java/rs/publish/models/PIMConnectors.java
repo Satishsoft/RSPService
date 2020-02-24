@@ -2,6 +2,9 @@ package rs.publish.models;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -23,6 +26,8 @@ import java.util.*;
 public class PIMConnectors {
 	private final Logger log = LoggerFactory.getLogger(Services.class);
 	private JSONObject headerDetails;
+	private String _types;
+	private String _classification;
 	@Autowired
 	private Configuration configuration;
 
@@ -53,6 +58,7 @@ public class PIMConnectors {
 	/*
 	 * GetEntities-> Get List of Entities Array data in Json format.
 	 */
+	@SuppressWarnings("unchecked")
 	public ArrayList<JSONArray> GetEntities(String query) {
 		ArrayList<JSONArray> entities_response = new ArrayList<JSONArray>();
 		try {
@@ -133,7 +139,7 @@ public class PIMConnectors {
 		Response response = null;
 		try {
 			JSONObject url = (JSONObject) headerDetails.get("url");
-			String urlValue = (String) url.get("value") + "/api/binarystreamobjectservice/prepareUpload";
+			String urlValue = (String) url.get("value") + "/api/binarystreamobjectservice/prepareDownload";
 			JSONObject headers = (JSONObject) headerDetails.get("headers");
 			String bodyContent = "{\r\n\"binaryStreamObject\": {\r\n\"id\": \"4573682d-a629-4116-81d1-e2a3024846e5\",\r\n\"type\": \"BinaryStreamObject\",\r\n\"properties\": {\r\n\"objectKey\": \""
 					+ objectKey + "\",\r\n\"originalFileName\": \"" + originalfilename
@@ -210,26 +216,106 @@ public class PIMConnectors {
 	/*
 	 * GetEntityFilterBodyData-> Get request body content as string.
 	 */
+	@SuppressWarnings("unchecked")
 	private String GetEntityFilterBodyData(String query, JSONObject entityBody) {
 		String bodyContent = null;
 		if (!query.isEmpty()) {
+			_types="";
+			_classification="";
+			GetQueries(query);
 			JSONObject filter = (JSONObject) ((JSONObject) ((JSONObject) entityBody.get("params")).get("query"))
 					.get("filters");
 			JSONArray types_array = (JSONArray) filter.get("typesCriterion");
-			types_array.clear();
-			if (query.contains(",")) {
-				String[] queryArray = query.split(",");
+			if (_types!=null&&!_types.isEmpty())
+			{
+				types_array.clear();
+			if (_types.contains(",")) {
+				String[] queryArray = _types.split(",");
 				for (int i = 0; i < queryArray.length; i++) {
-					types_array.add(queryArray[i]);
+					types_array.add(queryArray[i].trim());
 				}
-			} else {
-				types_array.add(query);
 			}
-			bodyContent = (String) entityBody.toString();
+			else {
+				types_array.add(_types);
+			}
 		} else {
 			bodyContent = entityBody.toString();
 		}
-		return bodyContent;
+		if (_classification!=null&&!_classification.isEmpty())
+			{
+			JSONArray queries=GetClassification(_classification);
+			if(filter.containsKey("attributesCriterion")) {
+				filter.remove("attributesCriterion");
+				filter.put("attributesCriterion",queries);
+			}else
+			{
+				filter.put("attributesCriterion",queries);	
+			}
+		}
+		bodyContent = (String) entityBody.toString();
+	}
+	else{
+			bodyContent = entityBody.toString();
+	}
+return bodyContent;
+}
+	/*
+	 * GetQueries-> Get all queries details.
+	 */
+	private void GetQueries(String query)
+	{
+		if(query.contains(";"))
+		{
+			String[] queryArray = query.split(";");
+			if(queryArray.length>0)
+			{
+			for (int i = 0; i < queryArray.length; i++) {
+				GetQueryvalues(queryArray[i].trim());
+			}
+			}
+		}
+		else
+		{
+			GetQueryvalues(query);
+		}
+	}
+	/*
+	 * GetQueryvalues-> Get queries values.
+	 */
+	private void GetQueryvalues(String queryArray)
+	{
+		if(!queryArray.isEmpty() &&queryArray!=null)
+		{
+			if(queryArray.contains(":"))
+			{
+				String[] _query= queryArray.split(":");
+				if(_query[0].toLowerCase().equals("type"))
+				_types=(_query[1].trim());
+				if(_query[0].toLowerCase().equals("classification"))
+					_classification=(_query[1].trim());
+			}
+		}
+	}
+	/*
+	 * GetClassification-> Get Classification.
+	 */
+	@SuppressWarnings("unchecked")
+	private JSONArray GetClassification(String classification)
+	{
+	 JSONArray classificationarray=new JSONArray();
+	 Masterclassification masterclassification=new Masterclassification();
+	 masterclassification.setEq(classification);
+	 masterclassification.setType("_STRING");
+	 Query query=new Query();
+	 query.setmasterclassification(masterclassification);
+	 ObjectMapper mapper = new ObjectMapper();
+     try {
+    	 JSONObject json =configuration.ReadFileAsJson(mapper.writeValueAsString(query));
+    	 classificationarray.add(json);
+     } catch (Exception e) {
+         e.printStackTrace();
+     }
+	 return classificationarray;
 	}
 
 	/*
@@ -244,6 +330,7 @@ public class PIMConnectors {
 		entities_Details = GetEntitiesArray("entities", response);
 		return entities_Details;
 	}
+	
 	private Hashtable<String, String> GetHeaderList(JSONObject headers)
 	{
 	Hashtable<String, String> headers_List = new Hashtable<String, String>();

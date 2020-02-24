@@ -14,7 +14,7 @@
 "x-rdp-firstname":"Mary",
 "x-rdp-lastname":"Jane",
 "x-rdp-useremail":"integrationadmin@riversand.com",
-"x-rdp-userroles":"vendor",
+"x-rdp-userroles":"admin",
 "content-type":"application/json",
 "cache-control": "no-cache",
 "postman-token": "710ba50a-5759-2869-edaa-7db84d3d2a2c",

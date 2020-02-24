@@ -10,9 +10,13 @@ import org.slf4j.LoggerFactory;
 import org.json.simple.JSONObject;
 import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -31,7 +35,6 @@ public class RSPublishConverters {
 	public void init() {
 		headerDetails = configuration.ReadFileAsJson(configuration.GetRSConfigValues("RSHeader.json"));
 	}
-
 	/*
 	 * LoginDetails-> Get User details query by userName and password as parameters
 	 */
@@ -97,31 +100,16 @@ public class RSPublishConverters {
 								JSONObject attribute_List = (JSONObject) data_Object.get("attributes");
 								if (attribute_List != null && !attribute_List.isEmpty()) {
 									Hashtable<String, String> attribute_Values = GetAttributeValues(attribute_List);
-									if (attribute_Values != null)
+									if (attribute_Values != null && attribute_Values.size() > 0)
 									{
-										if(attribute_Values.size() > 0)
 										attributes.putAll(attribute_Values);
 									}
 								}
 								JSONObject relationships = (JSONObject) data_Object.get("relationships");
 								if (relationships != null && !relationships.isEmpty()) {
-									JSONArray childof = (JSONArray) relationships.get("childof");
-									JSONArray hasImages = (JSONArray) relationships.get("hasimages");
-									JSONArray hasDocuments = (JSONArray) relationships.get("hasdocuments");
-									if (childof != null && childof.size() > 0) {
-										Hashtable<String, String> childof_List = GetChildof(childof);
-										if (childof_List != null && childof_List.size() > 0)
-											attributes.putAll(childof_List);
-									}
-									if (hasImages != null && hasImages.size() > 0) {
-										Hashtable<String, String> image_List = GetAssetsDetails(hasImages);
-										if (image_List != null && image_List.size() > 0)
-											attributes.putAll(image_List);
-									}
-									if (hasDocuments != null && hasDocuments.size() > 0) {
-										Hashtable<String, String> document_List = GetAssetsDetails(hasDocuments);
-										if (document_List != null && document_List.size() > 0)
-											attributes.putAll(document_List);
+									Hashtable<String, String> relationship_Values=fillRelationmships(relationships);
+									if(relationship_Values!=null && relationship_Values.size()>0) {
+										attributes.putAll(relationship_Values);
 									}
 								}
 							}
@@ -139,7 +127,37 @@ public class RSPublishConverters {
 		}
 		return finalResult;
 	}
-
+	
+	private Hashtable<String,String> fillRelationmships(JSONObject relationships){
+		Hashtable<String,String> relationshipsList=new Hashtable<String,String>();
+		if(relationships!=null&& !relationships.isEmpty()) {
+		JSONArray childof = (JSONArray) relationships.get("childof");
+		JSONArray kittingcontains = (JSONArray) relationships.get("kittingcontains");
+		JSONArray hasImages = (JSONArray) relationships.get("hasimages");
+		JSONArray hasDocuments = (JSONArray) relationships.get("hasdocuments");
+		if (childof != null && childof.size() > 0) {
+			Hashtable<String, String> childof_List = GetChildof(childof);
+			if (childof_List != null && childof_List.size() > 0)
+				relationshipsList.putAll(childof_List);
+		}
+		if (kittingcontains != null && kittingcontains.size() > 0) {
+			Hashtable<String, String> kittingcontains_List = GetKitting(kittingcontains);
+			if (kittingcontains_List != null && kittingcontains_List.size() > 0)
+				relationshipsList.putAll(kittingcontains_List);
+		}
+		if (hasImages != null && hasImages.size() > 0) {
+			Hashtable<String, String> image_List = GetAssetsDetails(hasImages);
+			if (image_List != null && image_List.size() > 0)
+				relationshipsList.putAll(image_List);
+		}
+		if (hasDocuments != null && hasDocuments.size() > 0) {
+			Hashtable<String, String> document_List = GetAssetsDetails(hasDocuments);
+			if (document_List != null && document_List.size() > 0)
+				relationshipsList.putAll(document_List);
+		}
+		}
+		return relationshipsList;
+	}
 	/*
 	 * GetChildof-> Get All entities child/SKU relationship details.
 	 */
@@ -161,7 +179,27 @@ public class RSPublishConverters {
 		}
 		return childof_List;
 	}
-
+	/*
+	 * GetKitting-> Get All entities child/kitting relationship details.
+	 */
+	private Hashtable<String, String> GetKitting(JSONArray kittingcontains) {
+		Hashtable<String, String> kitting_List = new Hashtable<String, String>();
+		if (kittingcontains != null && !kittingcontains.isEmpty()) {
+			for (int ch = 0; ch < kittingcontains.size(); ch++) {
+				JSONObject value_list = (JSONObject) kittingcontains.get(ch);
+				JSONObject relTo = (JSONObject) value_list.get("relTo");
+				if (relTo != null && !relTo.isEmpty()) {
+					if (!kitting_List.containsKey(FieldNames.kittingcontains_parentId)) {
+						kitting_List.put(FieldNames.kittingcontains_parentId, (String) relTo.get("id"));
+					}
+					if (!kitting_List.containsKey(FieldNames.kittingcontains_parentType)) {
+						kitting_List.put(FieldNames.kittingcontains_parentType, (String) relTo.get("type"));
+					}
+				}
+			}
+		}
+		return kitting_List;
+	}
 	/*
 	 * GetAssetsDetails-> Get All assets type details.
 	 */
@@ -169,8 +207,9 @@ public class RSPublishConverters {
 		Hashtable<String, String> result_Assets_List = new Hashtable<String, String>();
 		if (AssetsList != null && !AssetsList.isEmpty()) {
 			int imageSequence = 1;
-			Boolean primary_Check = false;
+			String primary_Check = "";
 			for (int asst = 0; asst < AssetsList.size(); asst++) {
+				primary_Check="";
 				JSONObject value_list = (JSONObject) AssetsList.get(asst);
 				JSONObject relTo = (JSONObject) value_list.get("relTo");
 				JSONObject assetsPrimary_check = (JSONObject) value_list.get("attributes");
@@ -179,7 +218,7 @@ public class RSPublishConverters {
 					if (values != null && !values.isEmpty() && values.size() > 0) {
 						for (int i = 0; i < values.size(); i++) {
 							JSONObject isPrimary = (JSONObject) values.get(i);
-							primary_Check = (Boolean) isPrimary.get("value");
+							primary_Check = String.valueOf(isPrimary.get("value"));
 						}
 					}
 				}
@@ -193,7 +232,7 @@ public class RSPublishConverters {
 								assets_FileName_list.get("property_originalfilename"));
 						if (assets_URL != null && !assets_URL.isEmpty()) {
 
-							if (primary_Check) {
+							if (primary_Check!="") {
 								if (!result_Assets_List.containsKey("main_primary" + type + "URL"))
 									result_Assets_List.put("main_primary" + type + "URL", assets_URL);
 								if (!result_Assets_List.containsKey("main_primary" + type + "filename"))
@@ -209,7 +248,7 @@ public class RSPublishConverters {
 							}
 
 						} else {
-							if (primary_Check) {
+							if (primary_Check.toLowerCase()=="true") {
 								if (!result_Assets_List.containsKey("main_primary" + type + "filename"))
 									result_Assets_List.put("main_primary" + type + "filename",
 											assets_FileName_list.get("property_originalfilename"));
@@ -226,7 +265,6 @@ public class RSPublishConverters {
 		}
 		return result_Assets_List;
 	}
-
 	/*
 	 * GetAssetsURL-> Get asset URL details.
 	 */
@@ -242,7 +280,7 @@ public class RSPublishConverters {
 					for (int i = 0; i < binaryStreamObjects.size(); i++) {
 						JSONObject binary_object = (JSONObject) binaryStreamObjects.get(i);
 						JSONObject properties = (JSONObject) ((JSONObject) binary_object.get("data")).get("properties");
-						assets_URL = (String) properties.get("uploadURL");
+						assets_URL = (String) properties.get("downloadURL");
 					}
 				}
 			}
@@ -251,7 +289,6 @@ public class RSPublishConverters {
 		}
 		return assets_URL;
 	}
-
 	/*
 	 * GetAssetsFileName-> Get asset file name and id.
 	 */
@@ -270,15 +307,12 @@ public class RSPublishConverters {
 		}
 		return fileName_List;
 	}
-
 	/*
 	 * GetAttributeValues-> Get attribute values.
 	 */
-	@SuppressWarnings("rawtypes")
 	private Hashtable<String, String> GetAttributeValues(JSONObject attribute_List) 
 	{
 		Hashtable<String, String> attributesValues = new Hashtable<String, String>();
-		List<String> complexattributeKeys=new ArrayList<String>();
 		try
 		{
 		if (attribute_List != null && !attribute_List.isEmpty())
@@ -296,37 +330,11 @@ public class RSPublishConverters {
 					}
 					JSONArray attribues_Group_Array = (JSONArray) attribues_Values.get("group");
 					if(attribues_Group_Array!=null && attribues_Group_Array.size()>0) {
-						//int j=0;
-						String complexValues="";
-						for (int i=0;i<attribues_Group_Array.size();i++)
+						String complexValues=getTableValue(attribues_Group_Array);
+						if (complexValues.length() > 0)
 						{
-							//j++;
-							JSONObject group_object = (JSONObject) attribues_Group_Array.get(i);
-							if(group_object!=null)
-							{
-								for (Iterator iteratorg = group_object.keySet().iterator();iteratorg.hasNext();) 
-								{
-									String child_attribues_name = (String) iteratorg.next();
-									if(!child_attribues_name.equals("locale") && !child_attribues_name.equals("id") && !child_attribues_name.equals("source") && !child_attribues_name.equals("value") && !child_attribues_name.equals("properties"))
-									{
-									if(!complexattributeKeys.contains(child_attribues_name))complexattributeKeys.add(child_attribues_name);
-									JSONObject group_Values = (JSONObject) group_object.get(child_attribues_name);
-									JSONArray group_Values_Array = (JSONArray) group_Values.get("values");
-									if (group_Values_Array != null && group_Values_Array.size() > 0) 
-									{
-										//attributesValues=FillAttributeValues(attributesValues,attribues_name+"_"+child_attribues_name+ String.valueOf(j),group_Values_Array);
-										complexValues=FillComplexAttributeValues(complexValues,group_Values_Array);
-									}
-									}
-								}
-								complexValues+="#~#";
-							}
+							attributesValues.put(attribues_name, complexValues);
 						}
-						if (complexattributeKeys.size() > 0)
-                        {
-                            String tablevalue = GetTableValue(complexValues, complexattributeKeys);
-                            attributesValues.put(attribues_name, tablevalue);
-                        }
 					}
 				}
 			}
@@ -336,8 +344,8 @@ public class RSPublishConverters {
 		log.info("------- RSPublishConverter GetAttributeValues ------ Exception ----- " + ex.toString());
 	}
 		return attributesValues;
-	}
-	/*
+	}	
+	/*	
 	 * GetAttributeValues-> Get attribute values list .
 	 */	
 	private Hashtable<String, String> FillAttributeValues( Hashtable<String, String> List, String attribues_name, JSONArray attribues_Values_Array1)
@@ -372,10 +380,43 @@ public class RSPublishConverters {
 		}
 			return List;
 	}
-	/*
-	 * GetAttributeValues-> Get complex attribute values.
-	 */
-	private String FillComplexAttributeValues( String complexvalue, JSONArray attribues_Values_Array1)
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private String getTableValue(JSONArray attribues_Group_Array) {
+		List<Map<String,String>> groupList= new ArrayList<Map<String,String>>();
+		Map<String,String> colvalue;
+		List<String> heading=new ArrayList();
+		for (int i=0;i<attribues_Group_Array.size();i++)
+		{
+			//j++;
+		 JSONObject group_object = (JSONObject) attribues_Group_Array.get(i);
+		 if(group_object!=null)
+		 {
+			colvalue=new HashMap<>();
+			for (Iterator iteratorg = group_object.keySet().iterator();iteratorg.hasNext();) 
+			{
+				String child_attribues_name = (String) iteratorg.next();
+				if(!child_attribues_name.equals("locale") && !child_attribues_name.equals("id") && !child_attribues_name.equals("source") && !child_attribues_name.equals("value") && !child_attribues_name.equals("properties"))
+				{
+					if(!heading.contains(child_attribues_name))heading.add(child_attribues_name);
+					JSONObject group_Values = (JSONObject) group_object.get(child_attribues_name);
+					JSONArray group_Values_Array = (JSONArray) group_Values.get("values");
+					if (group_Values_Array != null && group_Values_Array.size() > 0) 
+					{
+						colvalue=FillValues(colvalue,child_attribues_name,group_Values_Array);
+					}
+				}
+			}
+			Map<String,String> map = new TreeMap<String,String>(colvalue);
+			groupList.add(map);
+		 }
+	}
+	List<String> headingSortedList= heading.stream().sorted().collect(Collectors.toList());
+	
+	return getTableFormat(headingSortedList,groupList);
+	}
+	
+	private Map<String, String> FillValues(Map<String, String> List, String attName, JSONArray attribues_Values_Array1)
 	{
 		try
 		{
@@ -396,51 +437,50 @@ public class RSPublishConverters {
 					}
 				}
 			}
-			if (complexvalue!=null && !complexvalue.isEmpty()) {
-				complexvalue+="<td>" + value + "</td>";
+			if (!List.containsKey(attName)) {
+				List.put(attName, value);
 				}
-			else
-				complexvalue="<td>" + value + "</td>";
 			}
 		}
 		catch (Exception ex) {
 			ex.printStackTrace();
-			log.info("------- RSPublishConverter FillComplexAttributeValues ------ Exception ----- " + ex.toString());
+			log.info("------- RSPublishConverter FillValues ------ Exception ----- " + ex.toString());
 		}
-			return complexvalue;
+			return List;
 	}
-	/*
-	 * GetAttributeValues-> Get table for complex attribute values.
-	 */	
-	private String GetTableValue(String complexValues, List<String> complexobj)
-    {
+	 
+	private String getTableFormat(List<String> headingSortedList,List<Map<String,String>> groupList) {
 		String tablevalue = "";
 		String tdkey = "";
 		String tdvalue = "";
+		String trvalue="";
         try
         {
-            for (String key : complexobj)
+        	for (String key : headingSortedList)
             {
                 tdkey += "<th>" + key + "</th>";
             }
-            String[] complexlist = complexValues.split("#~#");
-            if(complexlist.length>0)
-            {
-                for(String value : complexlist)
-                {
-                    if(value!=null && !value.isEmpty())
-                    tdvalue += "<tr>" + value + "</tr>";
-                }
-            }
-
-            tablevalue = "<table><tr>" + tdkey + "</tr>" + tdvalue + "</table>";
+        	for(int j=0;j<groupList.size();j++) {
+        		for(int i=0;i<headingSortedList.size();i++) {
+        			if(!groupList.get(j).containsKey(headingSortedList.get(i)))
+        			{
+        				tdvalue+="<td></td>";
+        			}
+        			else
+        			{
+        				tdvalue+="<td>"+groupList.get(j).get(headingSortedList.get(i))+"</td>";
+        			}
+        		}
+        			trvalue+="<tr>"+tdvalue+"</tr>";
+        			tdvalue="";
+        	}
+        	tablevalue = "<table><tr>" + tdkey + "</tr>" + trvalue + "</table>";
         }
         catch (Exception ex)
         {
         	ex.printStackTrace();
-    		log.info("Exception occur in method GetTableValue: " + ex.toString());
+    		log.info("Exception occur in method getTableFormat: " + ex.toString());
         }
         return tablevalue;
-    }
-	
+	}
 }

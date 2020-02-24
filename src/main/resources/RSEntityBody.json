@@ -8,13 +8,16 @@
       ], 
       "filters": {
         "typesCriterion": [
-         "product","sku"
+       "sku","product","item"
         ]
       }
     },
     "fields": {
       "attributes": [
         "_ALL"
+      ],
+      "relationships": [
+        "hasimages","childof","hasdocuments"
       ]
     },
     "sort": {

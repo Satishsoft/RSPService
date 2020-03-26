@@ -1,6 +1,6 @@
 package rs.publish.models;
 
-import java.util.Dictionary;
+import java.util.Map;
 import java.util.List;
 
 public class FinalResult
@@ -8,7 +8,7 @@ public class FinalResult
 	    private int firstResult;
 	    private int maxResultHits;
 	    private int totalHits;
-	    private List<Dictionary<String, String>> hits;
+	    private List<Map<String, String>> hits;
 	    
 	    public int getFirstResult() {
 			return firstResult;
@@ -28,10 +28,10 @@ public class FinalResult
 		public void setTotalHits(int totalHits) {
 			this.totalHits = totalHits;
 		}
-		public List<Dictionary<String, String>> getHits() {
+		public List<Map<String, String>> getHits() {
 			return hits;
 		}
-		public void setHits(List<Dictionary<String, String>> hits) {
+		public void setHits(List<Map<String, String>> hits) {
 			this.hits = hits;
 		}
 }

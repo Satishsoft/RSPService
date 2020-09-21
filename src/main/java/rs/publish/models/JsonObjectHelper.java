@@ -99,6 +99,7 @@ public class JsonObjectHelper {
 	              JsonObject attributesObject= (JsonObject) var3.next();
 	              String attr_Name=attributesObject.get("name").getAsString();
 	              JsonObject attributeObject=getAttributesJsonObjectFromEntityObject(attributesObject);
+	              if(attributeObject!=null) {
 	              JsonArray values= attributeObject.getAsJsonObject("externalName").getAsJsonArray(Constants.VALUES);
 	              if(values!=null) {
 	                  value = values.get(0).getAsJsonObject().get("value").getAsString();
@@ -107,6 +108,7 @@ public class JsonObjectHelper {
 	                      }
 	                  }
 	              }
+	          }
 	          }
 	        }
 	        return attributeList;
@@ -178,12 +180,12 @@ public class JsonObjectHelper {
 	    return null;
 	}
 	
-	 public static String getIsPrimary(JsonObject relationshipJsonObject){
+	 public static String getAssetsAttributeValue(JsonObject relationshipJsonObject, String attributeName){
 	    if(relationshipJsonObject == null)
 	        return null;
 	    try{
-	        JsonObject attributeObject = relationshipJsonObject.getAsJsonObject(Constants.ATTRIBUTES).getAsJsonObject(Constants.ISPRIMARY);
-	        return getSingleValueFromAttribute(attributeObject);
+	        JsonObject attributesObject = getAssetsAttributes(relationshipJsonObject);//relationshipJsonObject.getAsJsonObject(Constants.ATTRIBUTES).getAsJsonObject(Constants.ISPRIMARY);
+	        return getAttributeValueByAttributeName(attributesObject,attributeName);
 	    } catch (Exception e){
 	    }
 	    return null;
@@ -201,4 +203,74 @@ public class JsonObjectHelper {
 	        return getSingleValueFromAttribute(attributeObject);
 	    }
 	 
+	 public static JsonObject getContextAttributesJsonObjectFromEntityObject(JsonObject entityJsonObject, String contextType, String contextName){
+	        if(entityJsonObject ==null){
+	            return null;
+	        }
+	        JsonObject contextJsonObject = getContextObjectFromEntity(entityJsonObject, contextType, contextName);
+	        if (contextJsonObject != null) {;
+	            if (contextJsonObject.has(Constants.ATTRIBUTES)) {
+	                JsonObject attributesInfo = contextJsonObject.getAsJsonObject(Constants.ATTRIBUTES);
+	                return attributesInfo;
+	            }
+	        }
+	        return null;
+	    }
+
+	 public static JsonObject getContextRelationshipsJsonObjectFromEntityObject(JsonObject entityJsonObject, String contextType, String contextName){
+	        if(entityJsonObject ==null){
+	            return null;
+	        }
+	        JsonObject contextJsonObject = getContextObjectFromEntity(entityJsonObject, contextType, contextName);
+	        if (contextJsonObject != null) {;
+	            if (contextJsonObject.has(Constants.RELATIONSHIPS)) {
+	                JsonObject attributesInfo = contextJsonObject.getAsJsonObject(Constants.RELATIONSHIPS);
+	                return attributesInfo;
+	            }
+	        }
+	        return null;
+	    }
+
+	    @SuppressWarnings("rawtypes")
+	 public static JsonObject getContextObjectFromEntity(JsonObject entityJsonObject, String contextType, String contextName) {
+	        if(entityJsonObject ==null){
+	            return null;
+	        }
+
+	        JsonElement contextInfo = entityJsonObject.get(Constants.DATA).getAsJsonObject().get(Constants.CONTEXTS);
+
+	        if (contextInfo != null && contextInfo.isJsonArray()) {
+	            Iterator contextInfoIterator = contextInfo.getAsJsonArray().iterator();
+
+	            while(contextInfoIterator.hasNext()) {
+
+	                JsonElement contextInfoItem = (JsonElement)contextInfoIterator.next();
+	                JsonObject contextInfoObject = contextInfoItem.getAsJsonObject();
+	                JsonObject context = contextInfoObject.getAsJsonObject(Constants.CONTEXT);
+
+	                JsonElement contextNameJsonElement =  context.get(contextType);
+
+	                if(contextNameJsonElement == null){
+	                    continue;
+	                }
+
+	                if(!contextNameJsonElement.getAsString().equals(contextName)){
+	                    continue;
+	                }
+
+	                return contextInfoObject;
+	            }
+	        }
+
+	        return null;
+	    }
+	    
+	 public static JsonObject getAssetsAttributes(JsonObject relationshipJsonObject){
+	        if(relationshipJsonObject == null)
+	            return null;
+	        if( relationshipJsonObject.getAsJsonObject(Constants.ATTRIBUTES)==null)
+	            return null;
+	        return relationshipJsonObject.getAsJsonObject(Constants.ATTRIBUTES);
+	    }
+
 }

@@ -14,10 +14,13 @@ import org.springframework.web.context.request.RequestContextHolder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.inject.internal.util.Strings;
 @Service
 public class PublishConverter {
 	private String queryType="";
 	private String querySearch="";
+	private String queryLocale="";
+	private String queryContext="";
 	Map<String,String> attributeExternalList=new HashMap();
 	
 	public LoginResponse loginInfo(String userName, String password) {
@@ -109,6 +112,9 @@ public class PublishConverter {
 							JsonObject attributes_Object;
 							if(Constants.readFromContext){
 								attributes_Object = JsonObjectHelper.getContextAttributesJsonObjectFromEntityObject(entity_Object,Constants.contextType,Constants.contextName);
+								if (attributes_Object==null || attributes_Object.isJsonNull()) {
+									attributes_Object = JsonObjectHelper.getAttributesJsonObjectFromEntityObject(entity_Object);
+								}
 							}
 							else
 							{
@@ -129,6 +135,9 @@ public class PublishConverter {
 							JsonObject relationships;
 							if(Constants.readFromContext){
 								relationships = JsonObjectHelper.getContextAttributesJsonObjectFromEntityObject(entity_Object,Constants.contextType,Constants.contextName);
+								if(relationships==null && relationships.isJsonNull()) {
+									relationships = JsonObjectHelper.getRelationshipsJsonObjectFromEntityObject(entity_Object);
+								}
 							}
 							else
 							{
@@ -333,7 +342,21 @@ public class PublishConverter {
 		JsonObject relationships_Object=RSRestConnector.getImageObject(id, type);
 		JsonObject relationshipInfo = JsonObjectHelper.getRelationshipsJsonObjectFromEntityObject(relationships_Object);
 		if(relationshipInfo!=null) {		
-			if(relationshipInfo.getAsJsonArray(Constants.IMAGESRelation)!=null && relationshipInfo.getAsJsonArray(Constants.IMAGESRelation).size()>0) {
+			if(Constants.relationships.equals("_ALL")){
+            Map<String,JsonArray> relationshipList=getRelationshipList(relationshipInfo);
+            if(relationshipList.size()>0) {
+                for (Map.Entry<String, JsonArray> entry : relationshipList.entrySet()) {
+                    if (entry.getKey().equals(Constants.IMAGESRelation) || entry.getKey().equals(Constants.DOCUMENTRelation)) {
+                    	relatiionshipList.putAll(getImageRelationship(entry.getValue(), entry.getKey()));
+                    }
+                   else {
+                	   relatiionshipList.putAll(getSKURelationship(entry.getValue(), entry.getKey()));
+                    }
+                }
+            }
+        }
+        else {
+        	if(relationshipInfo.getAsJsonArray(Constants.IMAGESRelation)!=null && relationshipInfo.getAsJsonArray(Constants.IMAGESRelation).size()>0) {
 	            relatiionshipList.putAll(getImageRelationship(relationshipInfo.getAsJsonArray(Constants.IMAGESRelation), Constants.IMAGESRelation));
 	        }
 	        if(relationshipInfo.getAsJsonArray(Constants.DOCUMENTRelation)!=null && relationshipInfo.getAsJsonArray(Constants.DOCUMENTRelation).size()>0) {
@@ -342,13 +365,24 @@ public class PublishConverter {
 	        if(relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation)!=null && relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation).size()>0) {
 	            relatiionshipList.putAll(getSKURelationship(relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation), Constants.CHILDOFRelation));
 	        }
-	        if(relationshipInfo.getAsJsonArray(Constants.CROSSSELLRelation)!=null && relationshipInfo.getAsJsonArray(Constants.CROSSSELLRelation).size()>0) {
-	            relatiionshipList.putAll(getSKURelationship(relationshipInfo.getAsJsonArray(Constants.CROSSSELLRelation), Constants.CROSSSELLRelation));
-	        }
 		}
+	}
+		
         return relatiionshipList;
    }
 	
+	private Map<String,JsonArray> getRelationshipList( JsonObject relationshipObject){
+        Map<String,JsonArray> relationship_List = new HashMap<>();
+            if(relationshipObject==null) return null;
+            for (Iterator<?> iterator = relationshipObject.keySet().iterator(); iterator.hasNext();) {
+                String relationship_name = (String) iterator.next();
+                JsonArray relationshipArray = (JsonArray) relationshipObject.get(relationship_name);
+                if (relationshipArray != null && relationshipArray.size() > 0) {
+                    if (!relationship_List.containsKey(relationship_name)) relationship_List.put(relationship_name,relationshipArray);
+                }
+            }
+            return relationship_List;
+    }
 	
 	private Map<String, String> getChildRelatiionshipDetails(JsonObject relationshipInfo) throws IOException {
 		Map<String, String> relatiionshipList=new HashMap<String, String>();
@@ -384,40 +418,47 @@ public class PublishConverter {
 	                   {
 	                	   name=JsonObjectHelper.getAttributeValueFromEntityObject(imageNameObj,"property_originalfilename");
 	                   }
-	                   
 	                   String isPrimary=JsonObjectHelper.getAssetsAttributeValue(relationshipInfo,Constants.ISPRIMARY);
 	                   String printImageType=JsonObjectHelper.getAssetsAttributeValue(relationshipInfo,Constants.PRINTIMAGETYPE);
 	                   if(name!=null) {
+	                	   if(printImageType==null) {
 		                	if(isPrimary!=null && isPrimary.toLowerCase()=="true") {
 		                	  if(!relatiionshipList.containsKey(relationshipName+"IsPrimary")) relatiionshipList.put(relationshipName+"isPrimary", name);
 		                	  if(Constants.imageurl) {
 			                	   String downloadurl= JsonObjectHelper.getRelationshipDownloadURL(relationshipInfo);
-			                	   if(!relatiionshipList.containsKey(relationshipName+"IsPrimaryURL")) relatiionshipList.put(relationshipName+"isPrimaryURL", downloadurl);
-			                   }
-		                	  if(printImageType!=null) {
-		                		  if(!relatiionshipList.containsKey(Constants.PRINTIMAGETYPE+"IsPrimary")) relatiionshipList.put(Constants.PRINTIMAGETYPE+"isPrimary", printImageType);
+			                	   if(downloadurl!=null) {
+			                		   if(!relatiionshipList.containsKey(relationshipName+"IsPrimaryURL") && downloadurl!=null) relatiionshipList.put(relationshipName+"isPrimaryURL", downloadurl);
+			                	   }
+			                	  }
 		                	  }
-		                   }
 		                   else {
 		                	   if(!relatiionshipList.containsKey(relationshipName+"IsSecondary"+i.toString()))relatiionshipList.put(relationshipName+"isSecondary"+i.toString(), name);
 		                	   if(Constants.imageurl) {
 			                	   String downloadurl= JsonObjectHelper.getRelationshipDownloadURL(relationshipInfo);
-			                	   if(!relatiionshipList.containsKey(relationshipName+"IsSecondaryURL"+i.toString())) relatiionshipList.put(relationshipName+"isSecondaryURL"+i.toString(), downloadurl);
-			                   }
-		                	   if(printImageType!=null) {
-			                		  if(!relatiionshipList.containsKey(Constants.PRINTIMAGETYPE+"IsSecondary"+i.toString())) relatiionshipList.put(Constants.PRINTIMAGETYPE+"IsSecondary"+i.toString(), printImageType);
-			                	  }
-		                	   
-		                	   i++;
-		                   }
+			                	   if(downloadurl!=null) {
+			                	   if(!relatiionshipList.containsKey(relationshipName+"IsSecondaryURL"+i.toString()) && downloadurl!=null) relatiionshipList.put(relationshipName+"isSecondaryURL"+i.toString(), downloadurl);
+			                	   }
+			                	   
+		                	   }
+		                	    i++;
+		                   	}
+	                	   }
+	                	   else {
+	   		                	if(!relatiionshipList.containsKey(relationshipName+printImageType))relatiionshipList.put(relationshipName+printImageType, name);
+	   		                	   if(Constants.imageurl) {
+	   			                	   String downloadurl= JsonObjectHelper.getRelationshipDownloadURL(relationshipInfo);
+	   			                	if(downloadurl!=null) {
+	   			                	   if(!relatiionshipList.containsKey(relationshipName+printImageType+"downloadurl") && downloadurl!=null) relatiionshipList.put(relationshipName+printImageType+"downloadurl", downloadurl);
+	   			                		}
+	   			                	}
+	   		                   }
 	                   }
-	               }
+	                }
 	           }
 	       }   
 	       return relatiionshipList;
 	   }
 	
-
 	@SuppressWarnings("rawtypes")
 	private Map<String, String> getSKURelationship(JsonArray relationshipInfoArray,String relationshipName){
 		Map<String, String> relatiionshipList=new HashMap<String, String>();

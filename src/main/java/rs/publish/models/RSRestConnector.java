@@ -161,7 +161,7 @@ public class RSRestConnector {
         MediaType mediaType = MediaType.parse("application/json");
         RequestBody body = RequestBody.create(mediaType, requestBody.toString());
         Request request = new Request.Builder()
-                .url(URL+"/"+Constants.tenantId+api)
+                .url(URL+api)
                 .method("POST", body)
                 .addHeader("x-rdp-version", "8.1")
                 .addHeader("x-rdp-clientId", "rdpclient")

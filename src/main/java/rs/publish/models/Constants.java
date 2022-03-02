@@ -81,7 +81,7 @@ public class Constants {
 */
      
      //smuckersds2
-
+/*
      public static final Boolean RELATIONSHIPALL=false;
 	 public static final String IMAGESRelation = "hasimages";
 	 public static final String DOCUMENTRelation = "hasdocuments";
@@ -107,45 +107,34 @@ public class Constants {
 	 public static final String ATTRIBUTEREFERENCETYPE="printattributeslist";
 	 public static final String REFERENCEATTRIBUTE="pvalue";
 	 public static final String PRINTIMAGETYPE= "printimagetype";
+	 */
 	 
-	 public static void setQueryLocaleContext(String querylocale, String querycontext) {
-		 if(querycontext==null || querycontext.isEmpty()) {
-			 CONTEXTNAME ="United States";//"United States";
-		 }
-		 else{
-			 CONTEXTNAME =querycontext;
-		 }
-		 if(querylocale==null || querylocale.isEmpty()) {
-			 LOCALES="en-US";
-		 }
-		 else{
-			 LOCALES=querylocale;
-		 }
-		 
-	 }
-	//Weber
-	/*
-	     public static final String IMAGESRelation = "hasimages";
-	     public static final String DOCUMENTRelation = "hasdocuments";
-	     public static final String CHILDOFRelation = "ischildof";
-	     public static final String CROSSSELLRelation = "crosssell";
-		 public static final String locale= "en-US";
-		 public static final  String tenantId="weberds";
-		 public static final  String userId="weber.admin@riversand.com";
-		 public static final String auth_client_id="epIyVsxR0Nm3tYOC4W478T6QbjvAiFSK";
-		 public static final String auth_client_secret="-CDrsJ59Cep5bD52in-qzAIlvM8R6RTSrA_MdWOpUHYyly-2mLNOvO9LeK9JQbk2";
-		 public static final String attributes="_ALL";
-		 public static final String relationships="_ALL";
-		 public static final Integer maxRecords=1000;
-		 public static final String types="grillmodel,grillvariant";
-		 public static final Boolean imageurl=true;
-		 public static final Boolean readFromContext=false;
-		 public static final String  contextName="RS Print";
-		 public static final String contextType="country";
-		 public static final String WebURL="http://manage.rdpdsna07.riversand-dataplatform.com";
-		 public static final String WebPORT="8085";
-		 public static final String assetsPORT="9095";
-		 */
+	//Veeder
+	
+     public static final Boolean RELATIONSHIPALL=true;
+	 public static final String IMAGESRelation = "hasimages";
+	 public static final String DOCUMENTRelation = "hasdocuments";
+	 public static final String CHILDOFRelation = "ischildof";
+	 public static String LOCALES= "en-US";
+	 public static final String TENANTID="veederds";
+	 public static final String USERID="veeder.businessadmin@riversand.com";
+	 public static final String AUTH_CLIENT_ID="LjqjYkBsnqOZ4te73LS04RQtw105sfu8";
+	 public static final String AUTH_CLIENT_SECRECT="ddqWaXlR3UnSl7CWpdNi9ng5gz4RH9W3DqPVpOofgms9VNMu_PI57IsJmtUqG1l2";
+	 public static final String ATTRIBUTE="_ALL";
+	 public static final String RELATISHIONSHIP="_ALL";
+	 public static final Integer MAXRECORD=1000;
+	 public static final String TYPES="parentitem,item";
+	 public static final Boolean IMAGEURL=true;
+	 public static final Boolean READFROMCONTEXT=false;
+	 public static String CONTEXTNAME="RS Print";
+	 public static final String CONTEXTTYPE="country";
+	 public static final String WEBURL="https://veederds.riversand.com";
+	 public static final String WEBPORT="";
+	 public static final String ASSETSPORT="";
+	 public static final Boolean ATTRIBUTEFROMREFERENCE=false;
+	 public static final String ATTRIBUTEREFERENCETYPE="printattributeslist";
+	 public static final String REFERENCEATTRIBUTE="pvalue";
+	 public static final String PRINTIMAGETYPE= "printimagetype";
 		 
 //Asendbpim
      /*
@@ -170,4 +159,20 @@ public class Constants {
 	 public static final String WebPORT="";
 	 public static final String assetsPORT="";
 */
+     
+     public static void setQueryLocaleContext(String querylocale, String querycontext) {
+		 if(querycontext==null || querycontext.isEmpty()) {
+			 CONTEXTNAME ="United States";//"United States";
+		 }
+		 else{
+			 CONTEXTNAME =querycontext;
+		 }
+		 if(querylocale==null || querylocale.isEmpty()) {
+			 LOCALES="en-US";
+		 }
+		 else{
+			 LOCALES=querylocale;
+		 }
+		 
+	 }
 }

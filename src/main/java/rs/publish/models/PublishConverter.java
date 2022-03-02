@@ -17,10 +17,10 @@ import com.google.gson.JsonObject;
 import com.google.inject.internal.util.Strings;
 @Service
 public class PublishConverter {
-	private String queryType="";
-	private String querySearch="";
-	private String queryLocale="";
-	private String queryContext="";
+	private static String queryType="";
+	private static String querySearch="";
+	private static String queryLocale="";
+	private static String queryContext="";
 	Map<String,String> attributeExternalList=new HashMap();
 	
 	public LoginResponse loginInfo(String userName, String password) {
@@ -52,10 +52,13 @@ public class PublishConverter {
 		FinalResult finalResult = new FinalResult();
 		queryType="";
 		querySearch="";
+		queryLocale="";
+		queryContext="";
 		if(!query.isEmpty())getQueries(query);
+		 Constants.setQueryLocaleContext(queryLocale,queryContext);
 		if(attributeExternalList.size()<=0) {
 			if(queryType.isEmpty()) {
-				 attributeExternalList=getAttributeExternalName(Constants.types.split(","));
+				 attributeExternalList=getAttributeExternalName(Constants.TYPES.split(","));
 		     }
 		    else {
 		    	if(queryType.contains(",")) {
@@ -110,8 +113,8 @@ public class PublishConverter {
 							attributeList = new ArrayList<Map<String, String>>();
 							JsonObject entity_Object = entitiesArray.get(i).getAsJsonObject();
 							JsonObject attributes_Object;
-							if(Constants.readFromContext){
-								attributes_Object = JsonObjectHelper.getContextAttributesJsonObjectFromEntityObject(entity_Object,Constants.contextType,Constants.contextName);
+							if(Constants.READFROMCONTEXT){
+								attributes_Object = JsonObjectHelper.getContextAttributesJsonObjectFromEntityObject(entity_Object,Constants.CONTEXTTYPE,Constants.CONTEXTNAME);
 								if (attributes_Object==null || attributes_Object.isJsonNull()) {
 									attributes_Object = JsonObjectHelper.getAttributesJsonObjectFromEntityObject(entity_Object);
 								}
@@ -133,9 +136,9 @@ public class PublishConverter {
 								}
 							}
 							JsonObject relationships;
-							if(Constants.readFromContext){
-								relationships = JsonObjectHelper.getContextAttributesJsonObjectFromEntityObject(entity_Object,Constants.contextType,Constants.contextName);
-								if(relationships==null && relationships.isJsonNull()) {
+							if(Constants.READFROMCONTEXT){
+								relationships = JsonObjectHelper.getContextAttributesJsonObjectFromEntityObject(entity_Object,Constants.CONTEXTTYPE,Constants.CONTEXTNAME);
+								if(relationships==null || relationships.isJsonNull()) {
 									relationships = JsonObjectHelper.getRelationshipsJsonObjectFromEntityObject(entity_Object);
 								}
 							}
@@ -166,8 +169,7 @@ public class PublishConverter {
 		}
 		return finalResult;
 	}
-	
-	
+		
 	private Map<String, String> getAttributes(JsonObject json_Attributes,Map<String,String> attributeExternameList){
         Map<String,List<JsonElement>> attributesdetails=JsonObjectHelper.getAttributeValuesFromAttributes(json_Attributes);
         if(!attributesdetails.isEmpty()){
@@ -175,8 +177,7 @@ public class PublishConverter {
         }
         return null;
     }
-	
-	
+		
 	@SuppressWarnings({ "rawtypes", "unchecked"})
 	private Map<String, String> fillAttributedetails (Map<String,List<JsonElement>> attributesdetails,Map<String,String> attributeExternameList){       
 		Map<String, String> attributes_values=new HashMap<String, String>();
@@ -234,7 +235,6 @@ public class PublishConverter {
         return attributes_values;
     }
 	
-	
 	 @SuppressWarnings({ "rawtypes", "unchecked" })
 	private String getGroupAttributeDetails(JsonArray attribues_Group_Array,Map<String,String> attributeExternameList) {
 		List<Map<String,String>> groupList= new ArrayList<Map<String,String>>();
@@ -267,7 +267,6 @@ public class PublishConverter {
 	return getTableFormat(headingSortedList,groupList,attributeExternameList);
 	}
 	 
-	
 	private Map<String, String> FillValues(Map<String, String> List, String attName, JsonArray attribues_Values_Array1)
 	{
 		try
@@ -298,7 +297,6 @@ public class PublishConverter {
 			return List;
 	}
 	
-	 
 	private String getTableFormat(List<String> headingSortedList,List<Map<String,String>> groupList,Map<String,String> attributeExternameList) {
 		String tablevalue = "";
 		String tdkey = "";
@@ -336,13 +334,12 @@ public class PublishConverter {
         return tablevalue;
 	}
 	
-	
 	private Map<String, String> getRelatiionshipDetails(String id,String type) throws IOException {
 		Map<String, String> relatiionshipList=new HashMap<String, String>();
 		JsonObject relationships_Object=RSRestConnector.getImageObject(id, type);
 		JsonObject relationshipInfo = JsonObjectHelper.getRelationshipsJsonObjectFromEntityObject(relationships_Object);
 		if(relationshipInfo!=null) {		
-			if(Constants.relationships.equals("_ALL")){
+			if(Constants.RELATIONSHIPALL){
             Map<String,JsonArray> relationshipList=getRelationshipList(relationshipInfo);
             if(relationshipList.size()>0) {
                 for (Map.Entry<String, JsonArray> entry : relationshipList.entrySet()) {
@@ -421,37 +418,28 @@ public class PublishConverter {
 	                   String isPrimary=JsonObjectHelper.getAssetsAttributeValue(relationshipInfo,Constants.ISPRIMARY);
 	                   String printImageType=JsonObjectHelper.getAssetsAttributeValue(relationshipInfo,Constants.PRINTIMAGETYPE);
 	                   if(name!=null) {
-	                	   if(printImageType==null) {
+	                	   String downloadurl= JsonObjectHelper.getRelationshipDownloadURL(relationshipInfo);
+	                	   if(printImageType!=null && downloadurl!=null) {
+		                		  if(!relatiionshipList.containsKey(printImageType+"_Url")) relatiionshipList.put(printImageType+"_Url", downloadurl);
+		                		  if(!relatiionshipList.containsKey(printImageType+"_Name")) relatiionshipList.put(printImageType+"_Name", name);
+		                	  }
+		                   else
+		                   {
 		                	if(isPrimary!=null && isPrimary.toLowerCase()=="true") {
 		                	  if(!relatiionshipList.containsKey(relationshipName+"IsPrimary")) relatiionshipList.put(relationshipName+"isPrimary", name);
-		                	  if(Constants.imageurl) {
-			                	   String downloadurl= JsonObjectHelper.getRelationshipDownloadURL(relationshipInfo);
-			                	   if(downloadurl!=null) {
-			                		   if(!relatiionshipList.containsKey(relationshipName+"IsPrimaryURL") && downloadurl!=null) relatiionshipList.put(relationshipName+"isPrimaryURL", downloadurl);
-			                	   }
-			                	  }
-		                	  }
+		                	  if(Constants.IMAGEURL) {
+			                	   
+			                	   if(!relatiionshipList.containsKey(relationshipName+"IsPrimaryURL") && downloadurl!=null) relatiionshipList.put(relationshipName+"isPrimaryURL", downloadurl);
+			                   }
+		                	}
 		                   else {
 		                	   if(!relatiionshipList.containsKey(relationshipName+"IsSecondary"+i.toString()))relatiionshipList.put(relationshipName+"isSecondary"+i.toString(), name);
-		                	   if(Constants.imageurl) {
-			                	   String downloadurl= JsonObjectHelper.getRelationshipDownloadURL(relationshipInfo);
-			                	   if(downloadurl!=null) {
+		                	   if(Constants.IMAGEURL) {
 			                	   if(!relatiionshipList.containsKey(relationshipName+"IsSecondaryURL"+i.toString()) && downloadurl!=null) relatiionshipList.put(relationshipName+"isSecondaryURL"+i.toString(), downloadurl);
-			                	   }
-			                	   
-		                	   }
-		                	    i++;
-		                   	}
-	                	   }
-	                	   else {
-	   		                	if(!relatiionshipList.containsKey(relationshipName+printImageType))relatiionshipList.put(relationshipName+printImageType, name);
-	   		                	   if(Constants.imageurl) {
-	   			                	   String downloadurl= JsonObjectHelper.getRelationshipDownloadURL(relationshipInfo);
-	   			                	if(downloadurl!=null) {
-	   			                	   if(!relatiionshipList.containsKey(relationshipName+printImageType+"downloadurl") && downloadurl!=null) relatiionshipList.put(relationshipName+printImageType+"downloadurl", downloadurl);
-	   			                		}
-	   			                	}
-	   		                   }
+			                   }
+		                	   i++;
+		                   }
+	                   }
 	                   }
 	                }
 	           }
@@ -479,7 +467,7 @@ public class PublishConverter {
         return relatiionshipList;
     }
 
-	private void getQueries(String query){
+	private static void getQueries(String query){
 		if(query.contains(";"))
 		{
 			String[] queryArray = query.split(";");
@@ -499,7 +487,7 @@ public class PublishConverter {
 	/*
 	 * GetQueryvalues-> Get queries values.
 	 */
-	private void getQueryvalues(String queryArray){
+	private static void getQueryvalues(String queryArray){
 		if(!queryArray.isEmpty() &&queryArray!=null)
 		{
 			if(queryArray.contains(":"))
@@ -509,6 +497,10 @@ public class PublishConverter {
 				queryType=(_query[1].trim());
 				if(_query[0].toLowerCase().equals("search"))
 					querySearch=(_query[1].trim());
+				if(_query[0].toLowerCase().equals("locale"))
+					queryLocale=(_query[1].trim());
+				if(_query[0].toLowerCase().equals("context"))
+					queryContext=(_query[1].trim());
 			}
 		}
 	}

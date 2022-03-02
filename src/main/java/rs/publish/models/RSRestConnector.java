@@ -3,6 +3,7 @@ package rs.publish.models;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import com.google.gson.*;
@@ -17,7 +18,7 @@ public class RSRestConnector {
 	public static JsonObject getUserDetails(String userName, String password) {
 		try {
 			JsonObject requestBody = getUserRequestBody(userName);
-			Response response = sendRequest(requestBody,Constants.WebURL,Constants.WebPORT, "/api/entitymodelservice/get");
+			Response response = sendRequest(requestBody,Constants.WEBURL,Constants.WEBPORT, "/api/entitymodelservice/get");
 			if (response != null && response.code() == 200) {
 				JsonArray valuesArray = GetEntitiesArray("entityModels",response);
                     if (valuesArray != null) {
@@ -35,12 +36,16 @@ public class RSRestConnector {
 	 */
 	public static List<JsonArray> getEntities(String query,String querySearch) {
 		List<JsonArray> entities_response = new ArrayList<JsonArray>();
-		try {			
-			if (Constants.totalRecords > Constants.maxRecords &&! querySearch.isEmpty()) {
-				long r_Count = (Constants.totalRecords % Constants.maxRecords == 0) ? Constants.totalRecords / Constants.maxRecords : ((Constants.totalRecords / Constants.maxRecords + 1));
+		try {
+			List<String>attributesList=null;
+			if(Constants.ATTRIBUTEFROMREFERENCE) {
+					attributesList=getAttributeList();
+			}
+			if (Constants.TOTALRECORD > Constants.MAXRECORD &&! querySearch.isEmpty()) {
+				long r_Count = (Constants.TOTALRECORD % Constants.MAXRECORD == 0) ? Constants.TOTALRECORD / Constants.MAXRECORD : ((Constants.TOTALRECORD / Constants.MAXRECORD + 1));
 				for (int i = 0; i <= r_Count; i++) {
-					JsonObject requestBody=getRSEntityRequestBody(query, querySearch,i);
-					Response response = sendRequest(requestBody, Constants.WebURL,Constants.WebPORT,"/api/entityappservice/get");
+					JsonObject requestBody=getRSEntityRequestBody(query, querySearch,i,attributesList);
+					Response response = sendRequest(requestBody, Constants.WEBURL,Constants.WEBPORT,"/api/entityappservice/get");
 					if(response!=null && response.code()==200){
 	                    JsonArray valuesArray = GetEntitiesArray("entities",response);
 	                    if (valuesArray != null) {
@@ -53,8 +58,8 @@ public class RSRestConnector {
 				}
 			}
 			else {
-				JsonObject requestBody=getRSEntityRequestBody(query,querySearch,0);
-				Response response = sendRequest(requestBody,Constants.WebURL,Constants.WebPORT, "/api/entityappservice/get");
+				JsonObject requestBody=getRSEntityRequestBody(query,querySearch,0,attributesList);
+				Response response = sendRequest(requestBody,Constants.WEBURL,Constants.WEBPORT, "/api/entityappservice/get");
 				if(response!=null && response.code()==200){
                     JsonArray valuesArray = GetEntitiesArray("entities",response);
                     if (valuesArray != null) {
@@ -68,10 +73,12 @@ public class RSRestConnector {
 		return entities_response;
 	}
 	
+	@SuppressWarnings({ "unused"})
+	
 	public static JsonObject getEntityManageObject(String type) throws IOException {
         JsonObject requestBody=getEntityManageRSjsonRequest(type);
         if(requestBody!=null) {
-            Response response = sendRequest(requestBody,Constants.WebURL,Constants.WebPORT, "/api/entitymodelservice/get");
+            Response response = sendRequest(requestBody,Constants.WEBURL,Constants.WEBPORT, "/api/entitymodelservice/get");
             if (response != null && response.code() == 200) {
             	JsonArray valuesArray = GetEntitiesArray("entityModels",response);
                 if (valuesArray != null) {
@@ -85,7 +92,7 @@ public class RSRestConnector {
     public static JsonArray getAttributeManageObject(List<String> attribute) throws IOException {
         JsonObject requestBody=getAttributeRSjsonRequest(attribute);
         if(requestBody!=null) {
-            Response response = sendRequest(requestBody,Constants.WebURL,Constants.WebPORT, "/api/entitymodelservice/get");
+            Response response = sendRequest(requestBody,Constants.WEBURL,Constants.WEBPORT, "/api/entitymodelservice/get");
             if (response != null && response.code() == 200) {
             	return  GetEntitiesArray("entityModels",response);
             }
@@ -96,7 +103,7 @@ public class RSRestConnector {
     public static JsonObject getImageNameObject( String entityid, String type) throws IOException {
         JsonObject requestBody= getImageNameRSjsonRequest(entityid,type);
         if(requestBody!=null) {
-            Response response = sendRequest(requestBody,Constants.WebURL,Constants.WebPORT, "/api/entityappservice/get");
+            Response response = sendRequest(requestBody,Constants.WEBURL,Constants.WEBPORT, "/api/entityappservice/get");
             if (response != null && response.code() == 200) {
                 JsonParser parser = new JsonParser();
                 String jsonData_response = response.body().string();
@@ -115,7 +122,7 @@ public class RSRestConnector {
     public static JsonObject getImageObject(String id, String type) throws IOException {
         JsonObject requestBody=getImageRSjsonRequest(id,type);
         if(requestBody!=null) {
-            Response response = sendRequest(requestBody,Constants.WebURL,Constants.assetsPORT, "/api/rsAssetService/getlinkedasseturl");
+            Response response = sendRequest(requestBody,Constants.WEBURL,Constants.ASSETSPORT, "/api/rsAssetService/getlinkedasseturl");
             if (response != null && response.code() == 200) {
                 JsonParser parser = new JsonParser();
                 String jsonData_response = response.body().string();
@@ -148,12 +155,12 @@ public class RSRestConnector {
 		return entities_Array;
 	}
 	
-	private static Response sendRequest(JsonObject requestBody, String webUrl, String webPort, String api) throws IOException{
+	private static Response sendRequest(JsonObject requestBody, String WEBURL, String webPort, String api) throws IOException{
         String URL="";
 		if (webPort!="") {
-			URL=webUrl+":"+webPort;
+			URL=WEBURL+":"+webPort;
         }else {
-        	URL=webUrl;
+        	URL=WEBURL;
         }
 		
 		OkHttpClient client = new OkHttpClient().newBuilder()
@@ -165,11 +172,11 @@ public class RSRestConnector {
                 .method("POST", body)
                 .addHeader("x-rdp-version", "8.1")
                 .addHeader("x-rdp-clientId", "rdpclient")
-                .addHeader("x-rdp-tenantId", Constants.tenantId)
-                .addHeader("x-rdp-userId", Constants.userId)
+                .addHeader("x-rdp-tenantId", Constants.TENANTID)
+                .addHeader("x-rdp-userId", Constants.USERID)
                 .addHeader("x-rdp-userRoles", "[\"admin\"]")
-                .addHeader("auth-client-id", Constants.auth_client_id)
-                .addHeader("auth-client-secret", Constants.auth_client_secret)
+                .addHeader("auth-client-id", Constants.AUTH_CLIENT_ID)
+                .addHeader("auth-client-secret", Constants.AUTH_CLIENT_SECRECT)
                 .addHeader("Content-Type", "application/json")
                 .build();
         return client.newCall(request).execute();
@@ -184,13 +191,13 @@ public class RSRestConnector {
         return parser.parse(currentLinksValues).getAsJsonArray();
     }
 
-	private static JsonObject getRSEntityRequestBody(String querytype,String querySearch,Integer i) {
+	private static JsonObject getRSEntityRequestBody(String querytype,String querySearch,Integer i,List<String>attributesList) {
 		JsonObject jsonObject=new JsonObject();
 		String[] typeList;
 	    JsonObject params=new JsonObject();
 	    JsonArray types=new JsonArray();
 	    if(querytype.isEmpty()) {
-	    	typeList=Constants.types.split(",");
+	    	typeList=Constants.TYPES.split(",");
 	    	types = GetentityjsonArray(Arrays.asList(typeList));
 	     }
 	    else {
@@ -207,7 +214,7 @@ public class RSRestConnector {
 	    JsonObject query=new JsonObject();
 	    JsonObject jsonLocale=new JsonObject();
 	    jsonLocale.addProperty("source","internal");
-	    jsonLocale.addProperty("locale",Constants.locale);
+	    jsonLocale.addProperty("locale",Constants.LOCALES);
 	    JsonArray valueContexts=new JsonArray();
 	    valueContexts.add(jsonLocale);
 	    query.add("valueContexts",valueContexts);
@@ -222,8 +229,8 @@ public class RSRestConnector {
 	    	JsonObject keywordsCriterion=new JsonObject();
 		    keywordsCriterion.addProperty("keywords", querySearch);
 		    keywordsCriterion.addProperty("operator", "_AND");
-	    	options.addProperty("maxRecords", Constants.maxRecords);
-		    options.addProperty("from", i*Constants.maxRecords);
+	    	options.addProperty("maxRecords", Constants.MAXRECORD);
+		    options.addProperty("from", i*Constants.MAXRECORD);
 		    filters.add("keywordsCriterion", keywordsCriterion);
 	    }
 	    query.add("filters",filters);
@@ -231,16 +238,22 @@ public class RSRestConnector {
 	    JsonArray relationships=new JsonArray();
 	    relationships.add("_ALL");
 	    fields.add("relationships",relationships);
-	    JsonArray attributes=new JsonArray();
+	    if(attributesList!=null && attributesList.size()>0){
+            JsonArray attributeArrayList = GetentityjsonArray(attributesList);
+            fields.add("attributes",attributeArrayList);
+        }
+	    else {
+        JsonArray attributes=new JsonArray();
 	    attributes.add("_ALL");
 	    fields.add("attributes",attributes); 
+	    } 
 	    params.add("query",query);    
 	    query.add("valueContexts",valueContexts);
-	    if(Constants.readFromContext)
+	    if(Constants.READFROMCONTEXT)
         {
             JsonArray contexts=new JsonArray();
             JsonObject context=new JsonObject();
-            context.addProperty(Constants.contextType,Constants.contextName);
+            context.addProperty(Constants.CONTEXTTYPE,Constants.CONTEXTNAME);
             contexts.add(context);
             query.add("contexts",contexts);
         }
@@ -279,11 +292,11 @@ public class RSRestConnector {
 	    JsonArray attributeArrayList = GetentityjsonArray(attribute);
 	    typesCriterion.add("attributeModel");
 	    JsonObject query=new JsonObject();
-	    if(Constants.readFromContext)
+	    if(Constants.READFROMCONTEXT)
         {
             JsonArray contexts=new JsonArray();
             JsonObject context=new JsonObject();
-            context.addProperty(Constants.contextType,Constants.contextName);
+            context.addProperty(Constants.CONTEXTTYPE,Constants.CONTEXTNAME);
             contexts.add(context);
             query.add("contexts",contexts);
         }
@@ -293,7 +306,7 @@ public class RSRestConnector {
 	    query.add("filters",filters);
 	    JsonObject jsonLocale=new JsonObject();
 	    jsonLocale.addProperty("source","internal");
-	    jsonLocale.addProperty("locale","en-US");
+	    jsonLocale.addProperty("locale",Constants.LOCALES);
 	    JsonArray valueContexts=new JsonArray();
 	    valueContexts.add(jsonLocale);
 	    query.add("valueContexts",valueContexts);
@@ -313,11 +326,11 @@ public class RSRestConnector {
 	    JsonArray typesCriterion=new JsonArray();
 	    typesCriterion.add("entityManageModel");
 	    JsonObject query=new JsonObject();
-	    if(Constants.readFromContext)
+	    if(Constants.READFROMCONTEXT)
         {
             JsonArray contexts=new JsonArray();
             JsonObject context=new JsonObject();
-            context.addProperty(Constants.contextType,Constants.contextName);
+            context.addProperty(Constants.CONTEXTTYPE,Constants.CONTEXTNAME);
             contexts.add(context);
             query.add("contexts",contexts);
         }
@@ -374,11 +387,11 @@ public class RSRestConnector {
         JsonObject filters=new JsonObject();
         filters.add("typesCriterion",typesCriterion);
         query.add("filters",filters);
-        if(Constants.readFromContext)
+        if(Constants.READFROMCONTEXT)
         {
             JsonArray contexts=new JsonArray();
             JsonObject context=new JsonObject();
-            context.addProperty(Constants.contextType,Constants.contextName);
+            context.addProperty(Constants.CONTEXTTYPE,Constants.CONTEXTNAME);
             contexts.add(context);
             query.add("contexts",contexts);
         }
@@ -391,5 +404,68 @@ public class RSRestConnector {
         jsonObject.add("params",params);
         return jsonObject;
     }
-
+	
+	@SuppressWarnings({ "rawtypes", "null" })
+	private static List<String> getAttributeList(){
+		List<String> attributes=new ArrayList();
+		try {
+			JsonArray attributeentityJsonArray = getLookUPObject(Constants.ATTRIBUTEREFERENCETYPE);
+			if(attributeentityJsonArray!=null && attributeentityJsonArray.size()>0){
+				Iterator var3 = attributeentityJsonArray.iterator();
+	            while (var3.hasNext()) {
+	                JsonObject attributeentityJsonObject=  (JsonObject) var3.next();
+	                if(attributeentityJsonObject!=null) {
+	                	String attributesJsonObject=JsonObjectHelper.getAttributeValueFromEntityObject(attributeentityJsonObject,Constants.REFERENCEATTRIBUTE);
+	                	if(attributesJsonObject!=null) {
+	                		attributes.add(attributesJsonObject);
+	                	}
+	                }
+	            }
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		return attributes;
+	}
+	
+	  private static JsonArray getLookUPObject(String lookupType) throws IOException {
+	        if(lookupType!=null) {
+	            JsonObject requestBody = getLookupRSjsonRequest(lookupType);
+	            if (requestBody != null) {
+	                Response response = sendRequest(requestBody,Constants.WEBURL,Constants.WEBPORT, "/api/entityappservice/get");
+	                if (response != null && response.code() == 200) {
+	                    JsonParser parser = new JsonParser();
+	                    String jsonData_response = response.body().string();
+	                    if (jsonData_response != null) {
+	                        JsonObject jsonImgObject = (JsonObject) parser.parse(jsonData_response);
+	                        return jsonImgObject.getAsJsonObject("response").getAsJsonArray("entities");
+	                    }
+	                }
+	            }
+	        }
+	        return null;
+	    }
+	  
+	  private static JsonObject getLookupRSjsonRequest(  String lookupName) {
+	        JsonObject jsonObject=new JsonObject();
+	        JsonObject params=new JsonObject();
+	        JsonArray typesCriterion=new JsonArray();
+	        typesCriterion.add(lookupName);
+	        JsonObject query=new JsonObject();
+	       // query.addProperty("id",lookupRowId);
+	        JsonObject filters=new JsonObject();
+	        filters.add("typesCriterion",typesCriterion);
+	        query.add("filters",filters);
+	        JsonObject fields=new JsonObject();
+	        JsonArray attributes=new JsonArray();
+	        attributes.add("_ALL");
+	        fields.add("attributes",attributes);
+	        params.add("query",query);
+	        params.add("fields",fields);
+	        jsonObject.add("params",params);
+	        return jsonObject;
+	    }
 }

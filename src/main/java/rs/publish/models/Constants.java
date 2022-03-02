@@ -27,38 +27,15 @@ public class Constants {
      public static final String GROUP = "group";
      
 	 //RS Config details 
-     
-   //presalesinta
-     /*
-     public static final String IMAGESRelation = "hasimages";
-     public static final String DOCUMENTRelation = "hasdocuments";
-     public static final String CHILDOFRelation = "childof";
-     public static final String CROSSSELLRelation = "crosssell";
-	 public static final String locale= "en-US";
-	 public static final  String tenantId="presalesinta";
-	 public static final  String userId="integrationadmin@riversand.com";
-	 public static final String auth_client_id="UP01Bb5v7BlRUfW1Yl3MdH5P5KlgjkSD";
-	 public static final String auth_client_secret="YVGnnNmA6sSTha88zHYEglz2XPx75iXbbR5VeW2I0M6_VQ-sXQtHxEegSuwOB7bJ";
-	 public static final String attributes="_ALL";
-	 public static final String relationships="_ALL";
-	 public static final Integer maxRecords=1000;
-	 public static final String types="product,sku";
-	 public static final Boolean imageurl=true;
-	 public static final Boolean readFromContext=true;
-	 public static final String  contextName="RS Print";
-	 public static final String contextType="country";
-	 public static final String WebURL="https://presalesinta.riversand.com";
-	 public static final String WebPORT="";
-	 public static final String assetsPORT="";
-	 */
-    //presalesintb
-     /*
-      public static final Boolean RELATIONSHIPALL=false;
+   
+    //presalesintab
+    
+     public static final Boolean RELATIONSHIPALL=false;
 	 public static final String IMAGESRelation = "hasimages";
 	 public static final String DOCUMENTRelation = "hasdocuments";
 	 public static final String CHILDOFRelation = "ischildof";
-	 public static  String LOCALES= "en-US";
-	 public static final String TENANTID="presalesintb";
+	 public static String LOCALES= "en-US";
+	 public static final String TENANTID="presalesintab";
 	 public static final String USERID="integrationadmin@riversand.com";
 	 public static final String AUTH_CLIENT_ID="UP01Bb5v7BlRUfW1Yl3MdH5P5KlgjkSD";
 	 public static final String AUTH_CLIENT_SECRECT="YVGnnNmA6sSTha88zHYEglz2XPx75iXbbR5VeW2I0M6_VQ-sXQtHxEegSuwOB7bJ";
@@ -69,16 +46,16 @@ public class Constants {
 	 public static final Boolean IMAGEURL=true;
 	 public static final Boolean IMAGEURLList=true;
 	 public static final Boolean READFROMCONTEXT=true;
-	 public static  String  CONTEXTNAME="RS Print";
+	 public static String  CONTEXTNAME="RS Print";
 	 public static final String CONTEXTTYPE="country";
-	 public static final String WEBURL="https://presalesintb.riversand.com";
+	 public static final String WEBURL="https://presalesintab.riversand.com";
 	 public static final String WEBPORT="";
 	 public static final String ASSETSPORT="";
 	 public static final Boolean ATTRIBUTEFROMREFERENCE=false;
 	 public static final String ATTRIBUTEREFERENCETYPE="printattributeslist";
 	 public static final String REFERENCEATTRIBUTE="pvalue";
 	 public static final String PRINTIMAGETYPE= "printimagetype";
-*/
+
      
      //smuckersds2
 /*
@@ -110,7 +87,7 @@ public class Constants {
 	 */
 	 
 	//Veeder
-	
+	/*
      public static final Boolean RELATIONSHIPALL=true;
 	 public static final String IMAGESRelation = "hasimages";
 	 public static final String DOCUMENTRelation = "hasdocuments";
@@ -135,7 +112,7 @@ public class Constants {
 	 public static final String ATTRIBUTEREFERENCETYPE="printattributeslist";
 	 public static final String REFERENCEATTRIBUTE="pvalue";
 	 public static final String PRINTIMAGETYPE= "printimagetype";
-		 
+		*/ 
 //Asendbpim
      /*
      public static final String IMAGESRelation = "hasimages";
@@ -162,7 +139,7 @@ public class Constants {
      
      public static void setQueryLocaleContext(String querylocale, String querycontext) {
 		 if(querycontext==null || querycontext.isEmpty()) {
-			 CONTEXTNAME ="United States";//"United States";
+			 CONTEXTNAME ="RS Print";//"United States";
 		 }
 		 else{
 			 CONTEXTNAME =querycontext;

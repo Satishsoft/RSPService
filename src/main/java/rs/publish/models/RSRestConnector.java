@@ -260,10 +260,11 @@ public class RSRestConnector {
 	    params.add("fields",fields);
 	    JsonObject sortTypeobj=new JsonObject();
 	    sortTypeobj.addProperty("createdDate","_ASC");
-	    sortTypeobj.addProperty("sortType","_STRING");
+	    sortTypeobj.addProperty("sortType","_DATETIME");
 	    JsonArray properties=new JsonArray();
 	    properties.add(sortTypeobj);
 	    JsonObject sort=new JsonObject();
+	    sort.add("properties",properties);
 	    params.add("sort", sort);
 	    params.add("options", options);
 	    jsonObject.add("params",params);

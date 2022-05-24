@@ -28,14 +28,13 @@ public class Constants {
      
 	 //RS Config details 
    
-    //presalesintab
-    
+    //presalesintb
      public static final Boolean RELATIONSHIPALL=false;
 	 public static final String IMAGESRelation = "hasimages";
 	 public static final String DOCUMENTRelation = "hasdocuments";
-	 public static final String CHILDOFRelation = "ischildof";
+	 public static final String CHILDOFRelation = "childof";
 	 public static String LOCALES= "en-US";
-	 public static final String TENANTID="presalesintab";
+	 public static final String TENANTID="presalesintb";
 	 public static final String USERID="integrationadmin@riversand.com";
 	 public static final String AUTH_CLIENT_ID="UP01Bb5v7BlRUfW1Yl3MdH5P5KlgjkSD";
 	 public static final String AUTH_CLIENT_SECRECT="YVGnnNmA6sSTha88zHYEglz2XPx75iXbbR5VeW2I0M6_VQ-sXQtHxEegSuwOB7bJ";
@@ -48,7 +47,7 @@ public class Constants {
 	 public static final Boolean READFROMCONTEXT=true;
 	 public static String  CONTEXTNAME="RS Print";
 	 public static final String CONTEXTTYPE="country";
-	 public static final String WEBURL="https://presalesintab.riversand.com";
+	 public static final String WEBURL="https://presalesintb.riversand.com";
 	 public static final String WEBPORT="";
 	 public static final String ASSETSPORT="";
 	 public static final Boolean ATTRIBUTEFROMREFERENCE=false;
@@ -112,7 +111,7 @@ public class Constants {
 	 public static final String ATTRIBUTEREFERENCETYPE="printattributeslist";
 	 public static final String REFERENCEATTRIBUTE="pvalue";
 	 public static final String PRINTIMAGETYPE= "printimagetype";
-		*/ 
+	*/
 //Asendbpim
      /*
      public static final String IMAGESRelation = "hasimages";

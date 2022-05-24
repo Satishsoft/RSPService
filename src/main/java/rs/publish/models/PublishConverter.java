@@ -108,8 +108,9 @@ public class PublishConverter {
 					entitiesArray = (JsonArray) response.get(r);
 					if (entitiesArray != null && entitiesArray.isJsonArray()) {
 						Map<String, String> attributes = null;
-						recordcount = recordcount + entitiesArray.size();
+						//recordcount = recordcount + entitiesArray.size();
 						for (int i = 0; i < entitiesArray.size(); i++) {
+							recordcount+= 1;
 							attributeList = new ArrayList<Map<String, String>>();
 							JsonObject entity_Object = entitiesArray.get(i).getAsJsonObject();
 							JsonObject attributes_Object;
@@ -146,14 +147,20 @@ public class PublishConverter {
 							{
 								relationships = JsonObjectHelper.getRelationshipsJsonObjectFromEntityObject(entity_Object);
 							}
-							if (relationships != null) {
-								Map<String, String> relationship_Values=getRelatiionshipDetails(id,type);
-								//Map<String, String> relationship_Values=getChildRelatiionshipDetails(relationships);
-								if(relationship_Values!=null && relationship_Values.size()>0) {
-									attributes.putAll(relationship_Values);
+							//if (relationships != null) {
+							//	Map<String, String> relationship_Values=getRelatiionshipDetails(id,type);
+							//	if(relationship_Values!=null && relationship_Values.size()>0) {
+							//		attributes.putAll(relationship_Values);
+							//	}
+							//}
+							if (relationships != null && attributes!=null && attributes.size()>0) {
+								List<Map<String, String>> Attributerelationship_Values=getRelatiionshipDetailsMultipleSkus(id,type,attributes);
+								if(Attributerelationship_Values!=null && Attributerelationship_Values.size()>0) {
+									recordcount+=Attributerelationship_Values.size()-1;
+									totalAttribute_List.addAll(Attributerelationship_Values);
 								}
 							}
-							if(attributes!=null && attributes.size()>0) {
+							else if(attributes!=null && attributes.size()>0) {
 								Map<String,String> attributesSortedList= new TreeMap<String,String>(attributes);
 								attributeList.add(attributesSortedList);
 								totalAttribute_List.addAll(attributeList);
@@ -368,6 +375,43 @@ public class PublishConverter {
         return relatiionshipList;
    }
 	
+	private List<Map<String, String>> getRelatiionshipDetailsMultipleSkus(String id,String type,Map<String, String> attributelist) throws IOException {
+		List<Map<String, String>> attributesAllList=new ArrayList<Map<String, String>>();
+		//Map<String, String> relatiionshipList=new HashMap<String, String>();
+		JsonObject relationships_Object=RSRestConnector.getImageObject(id, type);
+		JsonObject relationshipInfo = JsonObjectHelper.getRelationshipsJsonObjectFromEntityObject(relationships_Object);
+		if(relationshipInfo!=null) {		
+			if(Constants.RELATIONSHIPALL){
+            Map<String,JsonArray> relationshipList=getRelationshipList(relationshipInfo);
+            if(relationshipList.size()>0) {
+                for (Map.Entry<String, JsonArray> entry : relationshipList.entrySet()) {
+                    if (entry.getKey().equals(Constants.IMAGESRelation) || entry.getKey().equals(Constants.DOCUMENTRelation)) {
+                    	attributelist.putAll(getImageRelationship(entry.getValue(), entry.getKey()));
+                    }
+                   else {
+                	   attributesAllList=getSKURelationshipMultiSkus(entry.getValue(), entry.getKey(),attributelist);
+                    }
+                }
+            }
+        }
+        else {
+        	if(relationshipInfo.getAsJsonArray(Constants.IMAGESRelation)!=null && relationshipInfo.getAsJsonArray(Constants.IMAGESRelation).size()>0) {
+        		attributelist.putAll(getImageRelationship(relationshipInfo.getAsJsonArray(Constants.IMAGESRelation), Constants.IMAGESRelation));
+	        }
+	        if(relationshipInfo.getAsJsonArray(Constants.DOCUMENTRelation)!=null && relationshipInfo.getAsJsonArray(Constants.DOCUMENTRelation).size()>0) {
+	        	attributelist.putAll(getImageRelationship(relationshipInfo.getAsJsonArray(Constants.DOCUMENTRelation), Constants.DOCUMENTRelation));
+	        }
+	        if(relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation)!=null && relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation).size()>0) {
+	        	attributesAllList=getSKURelationshipMultiSkus(relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation), Constants.CHILDOFRelation,attributelist);
+	        }
+		}
+		if( attributesAllList.size()<=0) {
+			attributesAllList.add(attributelist);
+		}
+	}
+        return attributesAllList;
+   }
+	
 	private Map<String,JsonArray> getRelationshipList( JsonObject relationshipObject){
         Map<String,JsonArray> relationship_List = new HashMap<>();
             if(relationshipObject==null) return null;
@@ -451,6 +495,8 @@ public class PublishConverter {
 	private Map<String, String> getSKURelationship(JsonArray relationshipInfoArray,String relationshipName){
 		Map<String, String> relatiionshipList=new HashMap<String, String>();
         if (relationshipInfoArray != null && relationshipInfoArray.size() > 0) {
+        	int i=1;
+        	int j=1;
             Iterator var3 = relationshipInfoArray.iterator();
             while (var3.hasNext()) {
                 JsonObject relationshipInfo = (JsonObject) var3.next();
@@ -458,15 +504,50 @@ public class PublishConverter {
                     String relToId=JsonObjectHelper.getRelationshipId(relationshipInfo);
                     String type= JsonObjectHelper.getRelationshipType(relationshipInfo);
                     if(relToId!=null &&type!=null) {
-                    if(!relatiionshipList.containsKey(relationshipName+Constants.id))relatiionshipList.put(relationshipName+Constants.id, relToId);
-                    if(!relatiionshipList.containsKey(relationshipName+Constants.type))relatiionshipList.put(relationshipName+Constants.type, type);
+                    if(!relatiionshipList.containsKey(relationshipName+Constants.id+i))relatiionshipList.put(relationshipName+Constants.id+i, relToId);
+                    if(!relatiionshipList.containsKey(relationshipName+Constants.type+j))relatiionshipList.put(relationshipName+Constants.type+j, type);
                     }
+                    i++;
+                    j++;
                 }
             }
         }
         return relatiionshipList;
     }
 
+	private List<Map<String, String>> getSKURelationshipMultiSkus(JsonArray relationshipInfoArray,String relationshipName, Map<String, String> attributelist){
+		List<Map<String, String>> relatiionshipAllList=new ArrayList<Map<String, String>>();
+		Map<String, String> attributelistnew=new HashMap<String, String>(); 
+		if (relationshipInfoArray != null && relationshipInfoArray.size() > 0) {
+        	int i=1;
+            Iterator var3 = relationshipInfoArray.iterator();
+            while (var3.hasNext()) {
+                JsonObject relationshipInfo = (JsonObject) var3.next();
+                if (relationshipInfo != null) {
+                    String relToId=JsonObjectHelper.getRelationshipId(relationshipInfo);
+                    String type= JsonObjectHelper.getRelationshipType(relationshipInfo);
+                    if(relToId!=null &&type!=null) {
+	                    if(!attributelistnew.containsKey(relationshipName+Constants.type)) {
+	                    	attributelistnew.put(relationshipName+Constants.type, relToId);
+	                    	attributelistnew.putAll(attributelist);
+	                    	relatiionshipAllList.add(attributelistnew);
+	                    }
+	                    else
+	                    {
+	                    	attributelistnew=new HashMap<String, String>();
+	                    	attributelistnew.putAll(attributelist);
+	                    	attributelistnew.put(relationshipName+Constants.type, relToId);
+	                    	attributelistnew.put("id", attributelist.get("id")+"RelToId"+relToId);
+	                    	relatiionshipAllList.add(attributelistnew);
+	                    }
+                    }
+                }
+            }
+        }
+        return relatiionshipAllList;
+    }
+
+	
 	private static void getQueries(String query){
 		if(query.contains(";"))
 		{

@@ -18,6 +18,9 @@ import com.google.gson.JsonParser;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import rs.publish.models.Config;
+import rs.publish.models.Constants;
 import rs.publish.models.FinalResult;
 import rs.publish.models.LoginResponse;
 import rs.publish.models.PublishConverter;
@@ -37,6 +40,7 @@ public class Services {
 	public FinalResult search(@RequestParam("q") String q) {
 		//List<String>list=test();
 		FinalResult finalresult = new FinalResult();
+		Constants.getTenantConfigDetails();
 		try {
 			if (q != null) {
 				if (q.indexOf('(') != -1 && q.indexOf(')') != -1) {
@@ -56,6 +60,7 @@ public class Services {
 	public LoginResponse login(@RequestParam("returnProfile") Optional<Boolean> returnProfile,@RequestParam("username") String username, @RequestParam("password") String password) {
 		LoginResponse loginResponse = new LoginResponse();
 		try {
+			Constants.getTenantConfigDetails();
 			loginResponse = publishConverter.loginInfo(username,password);
 		} catch (Exception ex) {
 			ex.printStackTrace();

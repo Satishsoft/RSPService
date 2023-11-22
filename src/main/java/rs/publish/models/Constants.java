@@ -1,5 +1,6 @@
 package rs.publish.models;
 
+import java.util.Properties;
 
 public class Constants {
 	 public static final String type="Type";
@@ -26,15 +27,74 @@ public class Constants {
      public static final String ISPRIMARY = "isprimary";
      public static final String GROUP = "group";
      
-	 //RS Config details 
-   
+	 //RS Config details  
     //presalesintb
-     public static final Boolean RELATIONSHIPALL=false;
+    public static Boolean RELATIONSHIPALL;
+	 public static String IMAGESRelation;
+	 public static String DOCUMENTRelation;
+	 public static String CHILDOFRelation;
+	 public static String LOCALES;
+	 public static String TENANTID;
+	 public static String USERID;
+	 public static String AUTH_CLIENT_ID;
+	 public static String AUTH_CLIENT_SECRECT;
+	 public static String ATTRIBUTE;
+	 public static String RELATISHIONSHIP;
+	 public static Integer MAXRECORD;
+	 public static String TYPES;
+	 public static Boolean IMAGEURL;
+	 public static Boolean IMAGEURLList;
+	 public static Boolean READFROMCONTEXT;
+	 public static String  CONTEXTNAME;
+	 public static String CONTEXTTYPE;
+	 public static String WEBURL;
+	 public static String WEBPORT;
+	 public static String ASSETSPORT;
+	 public static Boolean ATTRIBUTEFROMREFERENCE;
+	 public static String ATTRIBUTEREFERENCETYPE;
+	 public static String REFERENCEATTRIBUTE;
+	 public static String PRINTIMAGETYPE;
+	 
+	   public static void getTenantConfigDetails(){
+		   Config config=new Config();
+	        Properties propertiesObj= config.readConfigfile();
+	        if(propertiesObj!=null && propertiesObj.size()>0){
+	        	Constants.RELATIONSHIPALL=Boolean.getBoolean(propertiesObj.get("RELATIONSHIPALL").toString().trim());
+	        	Constants.IMAGESRelation=propertiesObj.get("IMAGESRelation").toString().trim();
+	        	Constants.DOCUMENTRelation=propertiesObj.get("DOCUMENTRelation").toString().trim();
+	        	Constants.CHILDOFRelation=propertiesObj.get("CHILDOFRelation").toString().trim();
+	        	Constants.LOCALES=propertiesObj.get("LOCALES").toString().trim();
+	        	Constants.TENANTID=propertiesObj.get("TENANTID").toString().trim();
+	        	Constants.USERID=propertiesObj.get("USERID").toString().trim();
+	        	Constants.CONTEXTNAME=propertiesObj.get("CONTEXTNAME").toString().trim();
+	        	Constants.READFROMCONTEXT=Boolean.getBoolean(propertiesObj.get("READFROMCONTEXT").toString().trim());
+	        	Constants.CONTEXTTYPE=propertiesObj.get("CONTEXTTYPE").toString().trim();
+	        	Constants.AUTH_CLIENT_ID=propertiesObj.get("AUTH_CLIENT_ID").toString().trim();
+	        	Constants.AUTH_CLIENT_SECRECT=propertiesObj.get("AUTH_CLIENT_SECRECT").toString().trim();
+	        	Constants.ATTRIBUTE=propertiesObj.get("ATTRIBUTE").toString().trim();
+	        	Constants.RELATISHIONSHIP=propertiesObj.get("RELATISHIONSHIP").toString().trim();
+	        	Constants.MAXRECORD=Integer.parseInt(propertiesObj.get("MAXRECORD").toString().trim());
+	        	Constants.TYPES=propertiesObj.get("TYPES").toString().trim();
+	        	Constants.IMAGEURL=Boolean.getBoolean(propertiesObj.get("IMAGEURL").toString().trim());
+	        	Constants.IMAGEURLList=Boolean.getBoolean(propertiesObj.get("IMAGEURLList").toString().trim());
+	        	Constants.WEBURL=propertiesObj.get("WEBURL").toString().trim();
+	        	Constants.WEBPORT=propertiesObj.get("WEBPORT").toString().trim();
+	        	Constants.ASSETSPORT=propertiesObj.get("ASSETSPORT").toString().trim();
+	        	Constants.ATTRIBUTEFROMREFERENCE=Boolean.getBoolean(propertiesObj.get("ATTRIBUTEFROMREFERENCE").toString().trim());
+	        	Constants.ATTRIBUTEREFERENCETYPE=propertiesObj.get("ATTRIBUTEREFERENCETYPE").toString().trim();
+	        	Constants.REFERENCEATTRIBUTE=propertiesObj.get("REFERENCEATTRIBUTE").toString().trim();
+	        	Constants.REFERENCEATTRIBUTE=propertiesObj.get("REFERENCEATTRIBUTE").toString().trim();
+	        	Constants.PRINTIMAGETYPE=propertiesObj.get("PRINTIMAGETYPE").toString().trim();
+	        	
+	        }
+	    }
+	 
+    /* public static final Boolean RELATIONSHIPALL=false;
 	 public static final String IMAGESRelation = "hasimages";
 	 public static final String DOCUMENTRelation = "hasdocuments";
 	 public static final String CHILDOFRelation = "childof";
 	 public static String LOCALES= "en-US";
-	 public static final String TENANTID="presalesintb";
+	 public static final String TENANTID="presalesinta";
 	 public static final String USERID="integrationadmin@riversand.com";
 	 public static final String AUTH_CLIENT_ID="UP01Bb5v7BlRUfW1Yl3MdH5P5KlgjkSD";
 	 public static final String AUTH_CLIENT_SECRECT="YVGnnNmA6sSTha88zHYEglz2XPx75iXbbR5VeW2I0M6_VQ-sXQtHxEegSuwOB7bJ";
@@ -47,7 +107,7 @@ public class Constants {
 	 public static final Boolean READFROMCONTEXT=true;
 	 public static String  CONTEXTNAME="RS Print";
 	 public static final String CONTEXTTYPE="country";
-	 public static final String WEBURL="https://presalesintb.riversand.com";
+	 public static final String WEBURL="https://presalesinta.riversand.com";
 	 public static final String WEBPORT="";
 	 public static final String ASSETSPORT="";
 	 public static final Boolean ATTRIBUTEFROMREFERENCE=false;

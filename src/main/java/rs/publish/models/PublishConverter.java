@@ -395,20 +395,20 @@ public class PublishConverter {
             }
         }
         else {
-        	if(relationshipInfo.getAsJsonArray(Constants.IMAGESRelation)!=null && relationshipInfo.getAsJsonArray(Constants.IMAGESRelation).size()>0) {
-        		attributelist.putAll(getImageRelationship(relationshipInfo.getAsJsonArray(Constants.IMAGESRelation), Constants.IMAGESRelation));
-	        }
-	        if(relationshipInfo.getAsJsonArray(Constants.DOCUMENTRelation)!=null && relationshipInfo.getAsJsonArray(Constants.DOCUMENTRelation).size()>0) {
-	        	attributelist.putAll(getImageRelationship(relationshipInfo.getAsJsonArray(Constants.DOCUMENTRelation), Constants.DOCUMENTRelation));
-	        }
-	        if(relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation)!=null && relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation).size()>0) {
-	        	attributesAllList=getSKURelationshipMultiSkus(relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation), Constants.CHILDOFRelation,attributelist);
-	        }
-		}
-		if( attributesAllList.size()<=0) {
-			attributesAllList.add(attributelist);
-		}
-	}
+	        	if(relationshipInfo.getAsJsonArray(Constants.IMAGESRelation)!=null && relationshipInfo.getAsJsonArray(Constants.IMAGESRelation).size()>0) {
+	        		attributelist.putAll(getImageRelationship(relationshipInfo.getAsJsonArray(Constants.IMAGESRelation), Constants.IMAGESRelation));
+		        }
+		        if(relationshipInfo.getAsJsonArray(Constants.DOCUMENTRelation)!=null && relationshipInfo.getAsJsonArray(Constants.DOCUMENTRelation).size()>0) {
+		        	attributelist.putAll(getImageRelationship(relationshipInfo.getAsJsonArray(Constants.DOCUMENTRelation), Constants.DOCUMENTRelation));
+		        }
+		        if(relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation)!=null && relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation).size()>0) {
+		        	attributesAllList=getSKURelationshipMultiSkus(relationshipInfo.getAsJsonArray(Constants.CHILDOFRelation), Constants.CHILDOFRelation,attributelist);
+		        }
+		     }
+			}  
+			if( attributesAllList.size()<=0) {
+				attributesAllList.add(attributelist);
+			}
         return attributesAllList;
    }
 	
